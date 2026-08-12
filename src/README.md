@@ -1,7 +1,7 @@
 # Изучаем Rust реализуя большое количество связных списков
 
 > Хотите сообщить об ошибке или забрать все исходники разом?
-> [Заходите на Github!][github]
+> [Заходите на Github!][github/parserpro/too-many-lists_ru]
 
 > **NOTE**: The current edition of this book is written against Rust 2018,
 > which was first released with rustc 1.31 (Dec 8, 2018). If your rust toolchain
