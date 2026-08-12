@@ -1,7 +1,7 @@
 # Изучаем Rust реализуя большое количество связных списков
 
-> Got any issues or want to check out all the final code at once?
-> [Everything's on Github!][github]
+> Хотите сообщить об ошибке или забрать все исходники разом?
+> [Заходите на Github!][github]
 
 > **NOTE**: The current edition of this book is written against Rust 2018,
 > which was first released with rustc 1.31 (Dec 8, 2018). If your rust toolchain
