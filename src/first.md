@@ -1,12 +1,8 @@
-# A Bad Singly-Linked Stack
+# Плохой стек на базе односвязного списка
 
-This one's gonna be *by far* the longest, as we need to introduce basically
-all of Rust, and are gonna build up some things "the hard way" to better
-understand the language.
+Этот раздел будет *безусловно* самым длинным: нам нужно познакомить практически со всем Rust и собрать кое‑что «трудным путём», чтобы набить шишки и лучше понять язык.
 
-We'll put our first list in `src/first.rs`. We need to tell Rust that `first.rs` is
-something that our lib uses. All that requires is that we put this at the top of
-`src/lib.rs` (which Cargo made for us):
+Наш первый список мы поместим в `src/first.rs`. Нужно сообщить Rust, что `first.rs` — это часть того, что использует наша библиотека. Для этого достаточно добавить соответствующую строку в начало файла `src/lib.rs` (его для нас создал Cargo):
 
 ```rust ,ignore
 // in lib.rs
