@@ -97,186 +97,140 @@
 
 
 
-## Performance doesn't always matter
+## Производительность не всегда имеет значение
 
-Yes! Maybe your application is I/O-bound or the code in question is in some
-cold case that just doesn't matter. But this isn't even an argument for using
-a linked list. This is an argument for using *whatever at all*. Why settle for
-a linked list? Use a linked hash map!
+Да! Возможно, ваше приложение ограничено вводом‑выводом (I/O‑bound) или соответствующий фрагмент
+кода относится к редко используемому сценарию, где это просто не важно. Но это даже не аргумент
+*в пользу связного списка*. Это аргумент в пользу того, чтобы использовать *что угодно*. Зачем
+останавливаться на связном списке? Используйте, скажем, связный хэш‑мап!
 
-If performance doesn't matter, then it's *surely* fine to apply the natural
-default of an array.
+Если производительность не важна, то *безусловно* нормально выбрать естественный вариант по умолчанию — массив.
 
 
 
 
 
-## They have O(1) split-append-insert-remove if you have a pointer there
 
-Yep! Although as [Bjarne Stroustrup notes][bjarne] *this doesn't actually
-matter* if the time it takes to get that pointer completely dwarfs the
-time it would take to just copy over all the elements in an array (which is
-really quite fast).
+## У них O(1) для разбиения, добавления, вставки и удаления — если у вас уже есть указатель
 
-Unless you have a workload that is heavily dominated by splitting and merging
-costs, the penalty *every other* operation takes due to caching effects and code
-complexity will eliminate any theoretical gains.
+Да! Хотя, как отмечает [Бьярне Страуструп][bjarne], *на практике это не имеет значения*, если время, которое уходит на получение этого указателя, полностью перекрывает время, необходимое просто на копирование всех элементов в массиве (а это на самом деле довольно быстро).
 
-*But yes, if you're profiling your application to spend a lot of time in
-splitting and merging, you may have gains in a linked list*.
+Если ваша рабочая нагрузка не определяется в основном затратами на разбиение и слияние, то штраф, который вы платите за *все остальные* операции из‑за эффектов кэширования и сложности кода, сводит на нет любые теоретические преимущества.
 
+*Но да, если при профилировании приложения вы видите, что много времени уходит именно на разбиение и слияние, — связный список может дать выигрыш.*
 
 
 
 
-## I can't afford amortization
 
-You've already entered a pretty niche space -- most can afford amortization.
-Still, arrays are amortized *in the worst case*. Just because you're using an
-array, doesn't mean you have amortized costs. If you can predict how many
-elements you're going to store (or even have an upper-bound), you can
-pre-reserve all the space you need. In my experience it's *very* common to be
-able to predict how many elements you'll need. In Rust in particular, all
-iterators provide a `size_hint` for exactly this case.
 
-Then `push` and `pop` will be truly O(1) operations. And they're going to be
-*considerably* faster than `push` and `pop` on linked list. You do a pointer
-offset, write the bytes, and increment an integer. No need to go to any kind of
-allocator.
+## Я не могу позволить себе амортизацию
 
-How's that for low latency?
+Вы уже попали в довольно нишевую ситуацию — большинство вполне могут позволить себе амортизацию.
 
-*But yes, if you can't predict your load, there are worst-case
-latency savings to be had!*
+Тем не менее массивы амортизируются *в худшем случае*. Тот факт, что вы используете массив, вовсе не означает, что у вас обязательно будут амортизированные затраты. Если вы можете предсказать, сколько элементов собираетесь хранить (или хотя бы знаете верхнюю границу), вы можете заранее зарезервировать всё необходимое пространство. По моему опыту, возможность предсказать нужное количество элементов встречается *очень* часто. В частности, в Rust все итераторы предоставляют метод `size_hint` как раз для такого случая.
 
+Тогда операции `push` и `pop` будут по-настоящему O(1). И они окажутся *значительно* быстрее, чем `push` и `pop` для связного списка. Вы просто делаете смещение указателя, записываете байты и увеличиваете целое число. Никакой необходимости обращаться к аллокатору.
 
+Ну как, неплохая низкая задержка?
 
+*Но да, если вы не можете спрогнозировать нагрузку, то в худшем случае можно выиграть за счёт задержки!*
 
 
-## Linked lists waste less space
 
-Well, this is complicated. A "standard" array resizing strategy is to grow
-or shrink so that at most half the array is empty. This is indeed a lot of
-wasted space. Especially in Rust, we don't automatically shrink collections
-(it's a waste if you're just going to fill it back up again), so the wastage
-can approach infinity!
 
-But this is a worst-case scenario. In the best-case, an array stack only has
-three pointers of overhead for the entire array. Basically no overhead.
 
-Linked lists on the other hand unconditionally waste space per element.
-A singly-linked list wastes one pointer while a doubly-linked list wastes
-two. Unlike an array, the relative wasteage is proportional to the size of
-the element. If you have *huge* elements this approaches 0 waste. If you have
-tiny elements (say, bytes), then this can be as much as 16x memory overhead
-(8x on 32-bit)!
 
-Actually, it's more like 23x (11x on 32-bit) because padding will be added
-to the byte to align the whole node's size to a pointer.
+## Связные списки тратят меньше памяти
 
-This is also assuming the best-case for your allocator: that allocating and
-deallocating nodes is being done densely and you're not losing memory to
-fragmentation.
+Тут всё непросто. «Стандартная» стратегия изменения размера массива — увеличивать или уменьшать его так, чтобы пустой оставалась не более чем половина массива. Да, это действительно немало «потерянного» места. Особенно в Rust: мы не уменьшаем коллекции автоматически (это лишняя трата, если потом их снова придётся заполнять), так что перерасход памяти может в пределе стремиться к бесконечности!
 
-*But yes, if you have huge elements, can't predict your load, and have a
-decent allocator, there are memory savings to be had!*
+Но это сценарий худшего случая. В лучшем случае у стека на базе массива накладные расходы — всего три указателя на весь массив. То есть практически никаких.
 
+Связные списки, напротив, неизбежно тратят память на каждый элемент. В односвязном списке это один лишний указатель, в двусвязном — два. В отличие от массива, относительный перерасход пропорционален размеру элемента. Если у вас *огромные* элементы, накладные расходы стремятся к нулю. Если же элементы крошечные (например, байты), перерасход может достигать 16‑кратного объёма (8‑кратного на 32‑битной системе)!
 
+На самом деле ещё больше — примерно 23‑кратный (11‑кратный на 32‑битной), потому что к байту добавится выравнивание (padding): размер всего узла придётся подогнать под размер указателя.
 
+И это при условии наилучшего сценария для вашего аллокатора: узлы выделяются и освобождаются плотно, и вы не теряете память из‑за фрагментации.
 
+*Но да, если у вас огромные элементы, вы не можете спрогнозировать нагрузку и у вас хороший аллокатор — можно выиграть в объёме используемой памяти!*
 
-## I use linked lists all the time in &lt;functional language&gt;
 
-Great! Linked lists are super elegant to use in functional languages
-because you can manipulate them without any mutation, can describe them
-recursively, and also work with infinite lists due to the magic of laziness.
 
-Specifically, linked lists are nice because they represent an iteration without
-the need for any mutable state. The next step is just visiting the next sublist.
 
-Rust mostly does this kind of thing with [iterators][]. They can be infinite 
-and you can map, filter, reverse, and concatenate them just like a functional list,
-and it will all be done just as lazily!
 
-Rust also lets you easily talk about sub-arrays with *[slices][]*. Your usual
-head/tail split in a functional language is [just `slice.split_at_mut(1)`][split].
-For a long time, Rust had an experimental system for pattern matching on
-slices which was super cool, but the feature was simplified when it was
-stabilized. Still, [basic slice patterns][slice-pats] are neat! And of course,
-slices can be turned into iterators!
 
-*But yes, if you're limited to immutable semantics, linked lists can be very
-nice*.
+## Я всё время использую связные списки в <функциональном языке>
 
-Note that I'm not saying that functional programming is necessarily weak or
-bad. However it *is* fundamentally semantically limited: you're largely only
-allowed to talk about how things *are*, and not how they should be *done*. This
-is actually a *feature*, because it enables the compiler to do tons of [exotic
-transformations][ghc] and potentially figure out the *best* way to do things
-without you having to worry about it. However this comes at the cost of being
-*able* to worry about it. There are usually escape hatches, but at some limit
-you're just writing procedural code again.
+Отлично! В функциональных языках связные списки невероятно удобны: ими можно манипулировать без мутации, их легко описывать рекурсивно, а благодаря ленивым вычислениям можно работать даже с бесконечными списками.
 
-Even in functional languages, you should endeavour to use the appropriate data
-structure for the job when you actually need a data structure. Yes,
-singly-linked lists are your primary tool for control flow, but they're a
-really poor way to actually store a bunch of data and query it.
+В частности, связные списки хороши тем, что позволяют организовать итерацию без какого‑либо изменяемого состояния. Следующий шаг — просто перейти к следующему подсписку.
 
+В Rust подобные задачи в основном решаются с помощью [итераторов][]. Они могут быть бесконечными, и над ними можно выполнять `map`, `filter`, `reverse`, конкатенацию — точно так же, как над функциональным списком, и всё это будет работать лениво!
 
-## Linked lists are great for building concurrent data structures!
+Кроме того, Rust позволяет легко работать с подмассивами с помощью *[слайсов][]*. Обычное разделение на «голову» и «хвост», которое вы делаете в функциональном языке, в Rust — это [просто `slice.split_at_mut(1)`][split].
 
-Yes! Although writing a concurrent data structure is really a whole different
-beast, and isn't something that should be taken lightly. Certainly not something
-many people will even *consider* doing. Once one's been written, you're also not
-really choosing to use a linked list. You're choosing to use an MPSC queue or
-whatever. The implementation strategy is pretty far removed in this case!
+Долгое время в Rust существовала экспериментальная система сопоставления с образцом (pattern matching) для слайсов — это было очень круто, но при стабилизации функционал упростили. Тем не менее [базовые паттерны для слайсов][slice-pats] по‑прежнему удобны! И, разумеется, слайсы можно превращать в итераторы!
 
-*But yes, linked lists are the defacto heroes of the dark world of lock-free
-concurrency.*
+*Но да, если вы ограничены неизменяемой семантикой, связные списки могут быть очень удобны.*
 
+Обратите внимание: я не говорю, что функциональное программирование по своей сути слабое или плохое. Однако оно *действительно* фундаментально ограничено семантически: в основном вы можете описывать лишь то, *каковы* вещи, а не то, как их *следует делать*.
 
+На самом деле это *достоинство*: благодаря этому компилятор может выполнять массу [экзотических преобразований][ghc] и, возможно, сам найдёт *наилучший* способ решения задачи — вам не придётся об этом беспокоиться. Но за это приходится платить: вы теряете возможность *самим* об этом беспокоиться. Обычно есть «аварийные выходы», но в какой‑то момент вы всё равно придёте к тому, что пишете процедурный код.
 
+Даже в функциональных языках стоит стараться использовать подходящую для задачи структуру данных, когда она действительно нужна. Да, односвязные списки — ваш основной инструмент для управления потоком выполнения, но они — очень неудачный способ хранить большой объём данных и выполнять по ним запросы.
 
-## Mumble mumble kernel embedded something something intrusive.
 
-It's niche. You're talking about a situation where you're not even using
-your language's *runtime*. Is that not a red flag that you're doing something
-strange?
 
-It's also wildly unsafe.
+## Связные списки отлично подходят для создания конкурентных структур данных!
 
-*But sure. Build your awesome zero-allocation lists on the stack.*
+Да! Хотя написание конкурентной структуры данных — это совершенно отдельная непростая задача, к которой не стоит относиться легкомысленно. Это точно не то, что многие вообще *захотят* делать. А когда такая структура уже написана, вы по сути выбираете не связный список, а, скажем, очередь MPSC или что‑то подобное. В этом случае стратегия реализации уже довольно далека от простого использования связного списка!
 
+*Но да, связные списки — де‑факто герои мрачного мира конкурентности без блокировок (lock‑free).*
 
 
 
 
-## Iterators don't get invalidated by unrelated insertions/removals
 
-That's a delicate dance you're playing. Especially if you don't have
-a garbage collector. I might argue that your control flow and ownership
-patterns are probably a bit too tangled, depending on the details.
+## Мям‑мям, ядро, встраиваемые системы, интрузивные списки…
 
-*But yes, you can do some really cool crazy stuff with cursors.*
+Это нишевый случай. Вы говорите о ситуации, когда вы даже не используете *рантайм* своего языка. Разве это не тревожный звоночек, что вы делаете что‑то нестандартное?
 
+К тому же это крайне небезопасно.
 
+*Но ладно. Создавайте свои потрясающие списки без аллокаций прямо на стеке.*
 
 
 
-## They're simple and great for teaching!
 
-Well, yeah. You're reading a book dedicated to that premise.
-Well, singly-linked lists are pretty simple. Doubly-linked lists
-can get kinda gnarly, as we'll see.
 
 
+## Итераторы не становятся невалидными из‑за несвязанных вставок/удалений
 
+Вы тут идёте по довольно тонкому льду. Особенно если у вас нет сборщика мусора. Я бы даже сказал, что ваши схемы управления потоком выполнения и владения данными, вероятно, чересчур запутаны — всё зависит от деталей.
 
-# Take a Breath
+*Но да, с курсорами можно вытворять по‑настоящему крутые и безумные вещи.*
 
-Ok. That's out of the way. Let's write a bajillion linked lists.
 
-[On to the first chapter!](first.md)
+
+
+
+
+## Они просты и отлично подходят для обучения!
+
+Ну да. Вы ведь читаете книгу, которая как раз строится на этой идее.
+
+Односвязные списки действительно довольно просты. А вот двусвязные могут оказаться довольно запутанными — в этом мы ещё убедимся.
+
+
+
+
+
+# Переведём дух
+
+Ладно, с этим разобрались. Давайте теперь напишем миллиард связных списков.
+
+[К первой главе!](first.md)
 
 
 [rust-std-list]: https://doc.rust-lang.org/std/collections/struct.LinkedList.html
