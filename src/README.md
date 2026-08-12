@@ -1,125 +1,98 @@
 # Изучаем Rust реализуя большое количество связных списков
 
 > Хотите сообщить об ошибке или забрать все исходники разом?
-> [Заходите на Github!][https://github.com/parserpro/too-many-lists_ru]
+> [Заходите на Github!](https://github.com/parserpro/too-many-lists_ru)
 
-> **NOTE**: The current edition of this book is written against Rust 2018,
-> which was first released with rustc 1.31 (Dec 8, 2018). If your rust toolchain
-> is new enough, the Cargo.toml file that `cargo new` creates should contain the
-> line `edition = "2018"` (or if you're reading this in the far future, perhaps
-> some even larger number!). Using an older toolchain is possible, but unlocks
-> a secret **hardmode**, where you get extra compiler errors that go completely
-> unmentioned in the text of this book. Wow, sounds like fun!
+> **ПРИМЕЧАНИЕ**: Нынешнее издание этой книги написано с опорой на стандарт Rust 2018,
+> который впервые появился в компиляторе rustc 1.31 (8 декабря 2018 года).
+> Если ваш набор инструментов Rust достаточно свежий, в файле Cargo.toml,
+> который создаёт команда `cargo new`, должна быть строка `edition = "2018"`
+> (а если вы читаете это в далёком будущем — возможно, там будет какое‑нибудь ещё большее число!).
+> Использовать более старый набор инструментов можно, но это словно включить **секретный режим повышенной сложности**: вы получите дополнительные
+> ошибки компилятора, о которых в этой книге ни слова. Впрочем, может вы этого и хотите! 😄
 
-I fairly frequently get asked how to implement a linked list in Rust. The
-answer honestly depends on what your requirements are, and it's obviously not
-super easy to answer the question on the spot. As such I've decided to write
-this book to comprehensively answer the question once and for all.
+Мне довольно часто задают вопрос, как реализовать связный список в Rust. Ответ, честно говоря, зависит от ваших требований, и, разумеется, не так‑то просто выдать его на ходу. Поэтому я и решил написать эту книгу — чтобы раз и навсегда дать исчерпывающий ответ на этот вопрос.
 
-In this series I will teach you basic and advanced Rust programming
-entirely by having you implement 6 linked lists. In doing so, you should
-learn:
+В этой серии материалов я научу вас основам и продвинутым приёмам программирования на Rust — и всё это на примере реализации шести связных списков. В процессе вы освоите:
 
-* The following pointer types: `&`, `&mut`, `Box`, `Rc`, `Arc`, `*const`, `*mut`, `NonNull`(?)
-* Ownership, borrowing, inherited mutability, interior mutability, Copy
-* All The Keywords: struct, enum, fn, pub, impl, use, ...
-* Pattern matching, generics, destructors
-* Testing, installing new toolchains, using `miri`
-* Unsafe Rust: raw pointers, aliasing, stacked borrows, UnsafeCell, variance
+* следующие типы указателей: `&`, `&mut`, `Box`, `Rc`, `Arc`, `*const`, `*mut`, `NonNull` (?);
+* владение, заимствование, унаследованную изменяемость, внутреннюю изменяемость, трейт `Copy`;
+* все ключевые слова: `struct`, `enum`, `fn`, `pub`, `impl`, `use` и другие;
+* сопоставление с образцом, обобщения (дженерики), деструкторы;
+* тестирование, установку новых наборов инструментов, работу с `miri`;
+* небезопасный Rust: сырые указатели, алиасинг, стековые заимствования, `UnsafeCell`, дисперсию.
 
-Yes, linked lists are so truly awful that you deal with all of these concepts in
-making them real.
+Да, связные списки настолько по-настоящему кошмарны, что при их реализации приходится столкнуться со всеми этими концепциями.
 
-Everything's in the sidebar (may be collapsed on mobile), but for quick
-reference, here's what we're going to be making:
+Всё есть на боковой панели (на мобильных устройствах она может быть свёрнута), но для быстрого ориентира вот что мы собираемся реализовать:
 
-1. [A Bad Singly-Linked Stack](first.md)
-2. [An Ok Singly-Linked Stack](second.md)
-3. [A Persistent Singly-Linked Stack](third.md)
-4. [A Bad But Safe Doubly-Linked Deque](fourth.md)
-5. [An Unsafe Singly-Linked Queue](fifth.md)
-6. [TODO: An Ok Unsafe Doubly-Linked Deque](sixth.md)
-7. [Bonus: A Bunch of Silly Lists](infinity.md)
+1. [Плохой односвязный стек](first.md)
+2. [Нормальный односвязный стек](second.md)
+3. [Персистентный односвязный стек](third.md)
+4. [Плохой, но безопасный двусвязный дек](fourth.md)
+5. [Небезопасная односвязная очередь](fifth.md)
+6. [TODO: Нормальный небезопасный двусвязный дек](sixth.md)
+7. [Бонус: Куча забавных списков](infinity.md)
 
-Just so we're all the same page, I'll be writing out all the commands that I
-feed into my terminal. I'll also be using Rust's standard package manager, Cargo,
-to develop the project. Cargo isn't necessary to write a Rust program, but it's
-*so much* better than using rustc directly. If you just want to futz around you
-can also run some simple programs in the browser via [play.rust-lang.org][play].
+Чтобы мы все держались в одном ритме, я буду приводить все команды, которые ввожу в терминал. Для разработки проекта я также буду использовать стандартный менеджер пакетов Rust — Cargo. Cargo не обязателен для написания программы на Rust, но он *намного* удобнее, чем работа напрямую с rustc. Если вы просто хотите поэкспериментировать, можно запускать простые программы прямо в браузере через [play.rust-lang.org][play].
 
-In later sections, we'll be using "rustup" to install extra Rust tooling.
-I strongly recommend [installing all of your Rust toolchains using rustup](https://www.rust-lang.org/tools/install).
+В последующих разделах мы будем использовать «rustup» для установки дополнительных инструментов Rust.
 
-Let's get started and make our project:
+Я настоятельно рекомендую [устанавливать все наборы инструментов Rust с помощью rustup](https://www.rust-lang.org/tools/install).
+
+Давайте приступим и создадим наш проект:
 
 ```text
 > cargo new --lib lists
 > cd lists
 ```
 
-We'll put each list in a separate file so that we don't lose any of our work.
+Мы будем размещать каждый список в отдельном файле, чтобы не потерять проделанную работу.
 
-It should be noted that the *authentic* Rust learning experience involves
-writing code, having the compiler scream at you, and trying to figure out
-what the heck that means. I will be carefully ensuring that this occurs as
-frequently as possible. Learning to read and understand Rust's generally
-excellent compiler errors and documentation is *incredibly* important to
-being a productive Rust programmer.
+Стоит отметить, что *настоящий* опыт изучения Rust — это писать код, слушать, как на вас «кричит» компилятор,
+и пытаться разобраться, что вообще всё это значит. Я буду старательно следить за тем, чтобы такое происходило
+как можно чаще. Умение читать и понимать в целом отличные сообщения об ошибках компилятора и документацию Rust
+*невероятно* важно для продуктивной работы программиста на этом языке.
 
-Although actually that's a lie. In writing this I encountered *way* more
-compiler errors than I show. In particular, in the later chapters I won't be
-showing a lot of the random "I typed (copy-pasted) bad" errors that you
-expect to encounter in every language. This is a *guided tour* of having the
-compiler scream at us.
+Хотя, честно говоря, это не совсем правда. В процессе написания я столкнулся с *гораздо* большим количеством ошибок
+компилятора, чем показываю. В частности, в последующих главах я не буду демонстрировать множество случайных ошибок
+из серии «я неправильно ввёл (или скопировал) код» — с такими вы сталкиваетесь в любом языке. Это *экскурсия с гидом*
+по тому, как компилятор на нас «кричит».
 
-We're going to be going pretty slow, and I'm honestly not going to be very
-serious pretty much the entire time. I think programming should be fun, dang it!
-If you're the type of person who wants maximally information-dense, serious, and
-formal content, this book is not for you. Nothing I will ever make is for you.
-You are wrong.
+Мы будем двигаться довольно медленно, и, честно говоря, почти всё время я не собираюсь быть чересчур серьёзным.
+По-моему, программирование должно быть весёлым, чёрт возьми!
+
+Если вы из тех, кто хочет максимально насыщенное информацией, строгое и формальное изложение, — эта книга не для вас.
+Вообще ничто из того, что я когда‑либо сделаю, не для вас. Имейте это в виду.
 
 
 
 
-# An Obligatory Public Service Announcement
 
-Just so we're totally 100% clear: I hate linked lists. With
-a passion. Linked lists are terrible data structures. Now of course there's
-several great use cases for a linked list:
+# Обязательное публичное заявление
 
-* You want to do *a lot* of splitting or merging of big lists. *A lot*.
-* You're doing some awesome lock-free concurrent thing.
-* You're writing a kernel/embedded thing and want to use an intrusive list.
-* You're using a pure functional language and the limited semantics and absence
-  of mutation makes linked lists easier to work with.
-* ... and more!
+Просто чтобы мы были на 100 % уверены друг в друге: я ненавижу связные списки.
+Страстно. Связные списки — ужасные структуры данных.
 
-But all of these cases are *super rare* for anyone writing a Rust program. 99%
-of the time you should just use a Vec (array stack), and 99% of the other 1%
-of the time you should be using a VecDeque (array deque). These are blatantly
-superior data structures for most workloads due to less frequent allocation,
-lower memory overhead, true random access, and cache locality.
+Но, разумеется, у связных списков есть несколько отличных сценариев применения:
 
-Linked lists are as *niche* and *vague* of a data structure as a trie. Few would
-balk at me claiming a trie is a niche structure that your average programmer
-could happily never learn in an entire productive career -- and yet linked lists
-have some bizarre celebrity status. We teach every undergrad how to write a
-linked list. It's the only niche collection
-[I couldn't kill from std::collections][rust-std-list]. It's
-[*the* list in C++][cpp-std-list]!
+* Вам нужно *очень много* раз разделять или объединять большие списки. *Очень много*.
+* Вы делаете какую‑нибудь потрясающую вещь с параллелизмом без блокировок (lock‑free).
+* Вы пишете ядро системы или встраиваемое ПО и хотите использовать интрузивный список.
+* Вы используете чисто функциональный язык, где ограниченная семантика и отсутствие мутаций делают работу со связными списками проще.
+* … и многое другое!
 
-We should all as a community say *no* to linked lists as a "standard" data
-structure. It's a fine data structure with several great use cases, but those
-use cases are *exceptional*, not common.
+Но все эти случаи *крайне редки* для тех, кто пишет программы на Rust. В 99 % случаев вам стоит просто использовать `Vec` (стек на базе массива), а в 99 % из оставшегося 1 % — `VecDeque` (дек на базе массива). Это явно более удачные структуры данных для большинства задач благодаря менее частым выделениям памяти, меньшим накладным расходам, истинному произвольному доступу и лучшей локальности в кэше.
 
-Several people apparently read the first paragraph of this PSA and then stop
-reading. Like, literally they'll try to rebut my argument by listing one of the
-things in my list of *great use cases*. The thing right after the first
-paragraph!
+Связные списки — такая же *нишевая* и *неоднозначная* структура данных, как и префиксное дерево (trie). Мало кто станет возражать, если я скажу, что trie — нишевая структура, которую среднестатистический программист вполне может ни разу не изучить за всю свою продуктивную карьеру. И тем не менее у связных списков какой‑то причудливый «звёздный» статус.
 
-Just so I can link directly to a detailed argument, here are several attempts
-at counter-arguments I have seen, and my response to them. Feel free to skip
-to [the first chapter](first.md) if you just want to learn some Rust!
+Мы учим каждого студента-бакалавра писать связный список. Это единственная нишевая коллекция, [которую я не смог убрать из std::collections][rust-std-list]. Это [*тот самый* список в C++][cpp-std-list]!
+
+Нам всем, как сообществу, стоит сказать *«нет»* связным спискам в роли «стандартной» структуры данных. Это неплохая структура с несколькими отличными сценариями применения — но эти сценарии *исключительны*, а не обыденны.
+
+Судя по всему, некоторые люди читают только первый абзац этого объявления — и на этом останавливаются. Буквально: они пытаются опровергнуть мой аргумент, приводя в пример один из пунктов из моего же списка *«отличных сценариев применения»*. Тот самый, что идёт сразу после первого абзаца!
+
+Чтобы у меня была прямая ссылка на развёрнутый аргумент, ниже — несколько встречных доводов, с которыми я сталкивался, и мои ответы на них. Если вы просто хотите поучиться Rust — смело переходите к [первой главе](first.md)!
 
 
 
