@@ -1,4 +1,4 @@
-# Learn Rust With Entirely Too Many Linked Lists
+# Изучаем Rust реализуя большое количество связных списков
 
 > Got any issues or want to check out all the final code at once?
 > [Everything's on Github!][github]
