@@ -1,14 +1,16 @@
 [book]
-title = "Learning Rust With Entirely Too Many Linked Lists"
-author = "Aria Desires"
-description = "Learning Rust With Entirely Too Many Linked Lists"
+title = "Изучаем Rust реализуя большое количество связных списков"
+authors = ["Aria Desires"]
+description = "Перевод книги 'Learning Rust With Entirely Too Many Linked Lists'"
+language = "ru"
+src = "src"
 
 [build]
 build-dir = "book"
 create-missing = false
 
 [output.html]
-git-repository-url = "https://github.com/rust-unofficial/too-many-lists"
+git-repository-url = "https://github.com/parserpro/too-many-lists_ru"
 
 [output.html.search]
 limit-results = 30
