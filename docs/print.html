@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-51d02b1c.js";
+            window.path_to_searchindex_js = "searchindex-4ca18b99.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-13c05915.js"></script>
+        <script src="toc-124839b4.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -560,43 +560,22 @@ warning: field is never used: `next`
 Благодаря этому простые функции выглядят чуть аккуратнее. При этом по‑прежнему можно использовать <code>return</code>, чтобы вернуться из функции досрочно, — как в других C‑подобных языках.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="ownership-101"><a class="header" href="#ownership-101">Ownership 101</a></h1>
-<p>Now that we can construct a list, it’d be nice to be able to <em>do</em> something
-with it. We do that with “normal” (non-static) methods. Methods are a special
-case of function in Rust because of  the <code>self</code> argument, which doesn’t have
-a declared type:</p>
+<h1 id="основы-владения-ownership-101"><a class="header" href="#основы-владения-ownership-101">Основы владения (Ownership 101)</a></h1>
+<p>Теперь, когда мы умеем создавать список, было бы здорово уметь с ним <em>что‑то делать</em>. Для этого мы используем «обычные» (не статические) методы. Методы — это особый случай функции в Rust из‑за аргумента <code>self</code>, у которого нет явно указанного типа:</p>
 <pre><code class="language-rust ignore">fn foo(self, arg2: Type2) -&gt; ReturnType {
     // body
 }</code></pre>
-<p>There are 3 primary forms that self can take: <code>self</code>, <code>&amp;mut self</code>, and <code>&amp;self</code>.
-These 3 forms represent the three primary forms of ownership in Rust:</p>
+<p>Есть три основные формы, которые может принимать <code>self</code>: <code>self</code>, <code>&amp;mut self</code> и <code>&amp;self</code>.
+Эти три формы отражают три основные формы владения в Rust:</p>
 <ul>
-<li><code>self</code> - Value</li>
-<li><code>&amp;mut self</code> - mutable reference</li>
-<li><code>&amp;self</code> - shared reference</li>
+<li><code>self</code> — значение (владелец);</li>
+<li><code>&amp;mut self</code> — изменяемая ссылка;</li>
+<li><code>&amp;self</code> — общая (неизменяемая) ссылка.</li>
 </ul>
-<p>A value represents <em>true</em> ownership. You can do whatever you want with a value:
-move it, destroy it, mutate it, or loan it out via a reference. When you pass
-something by value, it’s <em>moved</em> to the new location. The new location now
-owns the value, and the old location can no longer access it. For this reason
-most methods don’t want <code>self</code> – it would be pretty lame if trying to work with
-a list made it go away!</p>
-<p>A mutable reference represents temporary <em>exclusive access</em> to a value that you
-don’t own. You’re allowed to do absolutely anything you want to a value you
-have a mutable reference to as long you leave it in a valid state when you’re
-done (it would be rude to the owner otherwise!). This means you can actually completely
-overwrite the value. A really useful special case of this is <em>swapping</em> a value
-out for another, which we’ll be using a lot. The only thing you can’t do with an
-<code>&amp;mut</code> is move the value out with no replacement. <code>&amp;mut self</code> is great for
-methods that want to mutate <code>self</code>.</p>
-<p>A shared reference represents temporary <em>shared access</em> to a value that you
-don’t own. Because you have shared access, you’re generally not allowed to
-mutate anything. Think of <code>&amp;</code> as putting the value out on display in a museum.
-<code>&amp;</code> is great for methods that only want to observe <code>self</code>.</p>
-<p>Later we’ll see that the rule about mutation can be bypassed in certain cases.
-This is why shared references aren’t called <em>immutable</em> references. Really,
-mutable references could be called <em>unique</em> references, but we’ve found that
-relating ownership to mutability gives the right intuition 99% of the time.</p>
+<p><strong>Значение</strong> олицетворяет <em>настоящее</em> владение. Со значением можно делать всё что угодно: перемещать, уничтожать, изменять или одалживать через ссылку. Когда вы передаёте что‑то по значению, оно <em>перемещается</em> в новое место. Теперь новое место владеет значением, а старое больше не может к нему обращаться. По этой причине большинство методов не используют <code>self</code>: было бы довольно нелепо, если бы попытка поработать со списком приводила к его исчезновению!</p>
+<p><strong>Изменяемая ссылка</strong> даёт временный <em>эксклюзивный доступ</em> к значению, которым вы не владеете. Вы можете делать с этим значением абсолютно всё, что захотите, — главное, оставить его в допустимом состоянии, когда закончите (иначе это будет невежливо по отношению к владельцу!). Это значит, что вы даже можете полностью перезаписать значение. Очень полезный частный случай — <em>замена</em> одного значения на другое; мы будем активно этим пользоваться. Единственное, чего нельзя сделать с <code>&amp;mut</code>, — это переместить значение, не оставив на его месте замены. <code>&amp;mut self</code> отлично подходит для методов, которые хотят изменить <code>self</code>.</p>
+<p><strong>Общая ссылка</strong> даёт временный <em>общий доступ</em> к значению, которым вы не владеете. Поскольку доступ общий, обычно вам не разрешается ничего изменять. Представьте, что <code>&amp;</code> — это как выставить значение на витрину в музее. <code>&amp;</code> отлично подходит для методов, которым нужно только наблюдать за <code>self</code>.</p>
+<p>Позже мы увидим, что правило о запрете изменений можно обойти в некоторых случаях. Именно поэтому общие ссылки не называют <em>неизменяемыми</em>. На самом деле изменяемые ссылки можно было бы называть <em>уникальными</em>, но оказалось, что связь владения с изменяемостью даёт правильную интуицию в 99 % случаев.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="push"><a class="header" href="#push">Push</a></h1>
 <p>So let’s write pushing a value onto a list. <code>push</code> <em>mutates</em> the list,
@@ -2196,7 +2175,7 @@ one, so <code>iter_mut</code> needs to take <code>&amp;mut self</code>. Just a s
 <p>What about the other one?</p>
 <p>Oops! I actually accidentally made an error when writing the <code>iter</code> impl in
 the previous section, and we were just getting lucky that it worked!</p>
-<p>We have just had our first run in with the magic of Copy. When we introduced <a href="#ownership-101">ownership</a> we
+<p>We have just had our first run in with the magic of Copy. When we introduced <a href="#основы-владения-ownership-101">ownership</a> we
 said that when you move stuff, you can’t use it anymore. For some types, this
 makes perfect sense. Our good friend Box manages an allocation on the heap for
 us, and we certainly don’t want two pieces of code to think that they need to
