@@ -192,18 +192,11 @@ pub enum List {
 }
 ```
 
-Hopefully this seems like an even worse idea to you. Most notably, this really
-complicates our logic, because there is now a completely invalid state:
-`ElemThenNotEmpty(0, Box(Empty))`. It also *still* suffers from non-uniformly
-allocating our elements.
+Надеюсь, тебе эта идея тоже кажется ещё хуже. Самое заметное — она сильно усложняет логику, потому что теперь у нас есть совершенно невалидное состояние: `ElemThenNotEmpty(0, Box(Empty))`. К тому же она *по‑прежнему* страдает от неравномерного выделения памяти под элементы.
 
-However it does have *one* interesting property: it totally avoids allocating
-the Empty case, reducing the total number of heap allocations by 1. Unfortunately,
-in doing so it manages to waste *even more space*! This is because the previous
-layout took advantage of the *null pointer optimization*.
+Но у неё есть *одно* интересное свойство: она полностью избегает выделения памяти для случая `Empty`, сокращая общее количество выделений в куче на 1. К сожалению, при этом она умудряется тратить *ещё больше* памяти! Всё потому, что предыдущая компоновка использовала *оптимизацию нулевого указателя*.
 
-We previously saw that every enum has to store a *tag* to specify which variant
-of the enum its bits represent. However, if we have a special kind of enum:
+Ранее мы видели, что каждый enum должен хранить *тег*, чтобы указать, какой вариант enum представляют его биты. Но если у нас особый вид enum…
 
 ```rust,ignore
 enum Foo {
@@ -212,31 +205,17 @@ enum Foo {
 }
 ```
 
-the null pointer optimization kicks in, which *eliminates the space needed for
-the tag*. If the variant is A, the whole enum is set to all `0`'s. Otherwise,
-the variant is B. This works because B can never be all `0`'s, since it contains
-a non-zero pointer. Slick!
+Срабатывает оптимизация нулевого указателя — и она *полностью убирает место, нужное для тега*. Если вариант — A, весь enum устанавливается в нули. В противном случае вариант — B. Это работает, потому что B никогда не может быть всеми нулями: он содержит ненулевой указатель. Шикарно!
 
-Can you think of other enums and types that could do this kind of optimization?
-There's actually a lot! This is why Rust leaves enum layout totally unspecified.
-There are a few more complicated enum layout optimizations that Rust will do for
-us, but the null pointer one is definitely the most important!
-It means `&`, `&mut`, `Box`, `Rc`, `Arc`, `Vec`, and
-several other important types in Rust have no overhead when put in an `Option`!
-(We'll get to most of these in due time.)
+Можешь придумать другие enum и типы, где возможна такая оптимизация? На самом деле их очень много! Именно поэтому Rust вообще не фиксирует раскладку enum — оставляет её на усмотрение компилятора. Есть и более сложные оптимизации раскладки enum, которые Rust делает для нас, но оптимизация нулевого указателя — определённо самая важная!
 
-So how do we avoid the extra junk, uniformly allocate, *and* get that sweet
-null-pointer optimization? We need to better separate out the idea of having an
-element from allocating another list. To do this, we have to think a little more
-C-like: structs!
+Это значит, что `&`, `&mut`, `Box`, `Rc`, `Arc`, `Vec` и ещё несколько важных типов в Rust не несут накладных расходов, когда помещаются в `Option`! (До большинства из них мы доберёмся в своё время.)
 
-While enums let us declare a type that can contain *one* of several values,
-structs let us declare a type that contains *many* values at once. Let's break
-our List into two types: A List, and a Node.
+Так как же нам избежать лишнего «мусора», выделять память единообразно *и* получить эту замечательную оптимизацию нулевого указателя? Нужно лучше разделить идею «есть элемент» и «выделяем ещё один список». Для этого придётся подумать чуть более «по‑C‑шному»: через структуры!
 
-As before, a List is either Empty or has an element followed by another List.
-By representing the "has an element followed by another List" case by an
-entirely separate type, we can hoist the Box to be in a more optimal position:
+В то время как enum позволяет объявить тип, который может содержать *одно* из нескольких значений, структуры позволяют объявить тип, который содержит *сразу несколько* значений. Давайте разобьём наш List на два типа: List и Node.
+
+Как и раньше, List либо пустой, либо содержит элемент и за ним идёт другой List. Представляя случай «есть элемент, за которым следует другой List» с помощью совершенно отдельного типа, мы можем вынести Box в более оптимальную позицию:
 
 ```rust ,ignore
 struct Node {
@@ -250,15 +229,13 @@ pub enum List {
 }
 ```
 
-Let's check our priorities:
+Проверим наши приоритеты:
 
-* Tail of a list never allocates extra junk: check!
-* `enum` is in delicious null-pointer-optimized form: check!
-* All elements are uniformly allocated: check!
+* Хвост списка не выделяет лишний «мусор» в памяти: есть!
+* `enum` в восхитительной форме с оптимизацией нулевого указателя: есть!
+* Все элементы выделяются единообразно: есть!
 
-Alright! We actually just constructed exactly the layout that we used to
-demonstrate that our first layout (as suggested by the official Rust
-documentation) was problematic.
+Отлично! Мы фактически только что сконструировали ровно ту компоновку, которую раньше использовали, чтобы показать, почему первая компоновка (та самая, которую подсказывала официальная документация Rust) была проблемной.
 
 ```text
 > cargo build
@@ -276,12 +253,10 @@ warning: private type `first::Node` in public interface (error E0446)
 
 :(
 
-Rust is mad at us again. We marked the `List` as public (because we want people
-to be able to use it), but not the `Node`. The problem is that the internals of
-an `enum` are totally public, and we're not allowed to publicly talk about
-private types. We could make all of `Node` totally public, but generally in Rust
-we favour keeping implementation details private. Let's make `List` a struct, so
-that we can hide the implementation details:
+Rust снова на нас сердится. Мы сделали `List` публичным (потому что хотим, чтобы люди могли его использовать), а `Node` — нет. Проблема в том, что внутренности `enum` полностью публичны, а нам нельзя публично упоминать приватные типы.
+
+Можно сделать весь `Node` публичным, но в Rust обычно предпочитают держать детали реализации приватными. Давайте сделаем `List` структурой — так мы сможем скрыть детали реализации:
+
 
 ```rust ,ignore
 pub struct List {
@@ -299,8 +274,7 @@ struct Node {
 }
 ```
 
-Because `List` is a struct with a single field, its size is the same as that
-field. Yay zero-cost abstractions!
+Поскольку `List` — это структура с единственным полем, её размер совпадает с размером этого поля. Ура абстракциям без накладных расходов!
 
 ```text
 > cargo build
@@ -339,8 +313,4 @@ warning: field is never used: `next`
 
 ```
 
-Alright, that compiled! Rust is pretty mad, because as far as it can tell,
-everything we've written is totally useless: we never use `head`, and no one who
-uses our library can either since it's private. Transitively, that means Link
-and Node are useless too. So let's solve that! Let's implement some code for our
-List!
+Отлично, собралось! Rust довольно сильно сердится: насколько он может судить, всё, что мы написали, совершенно бесполезно: мы никогда не используем `head`, и никто из тех, кто пользуется нашей библиотекой, тоже не сможет этого сделать, потому что поле приватное. По цепочке это значит, что `Link` и `Node` тоже бесполезны. Так что давайте это исправим! Давайте реализуем какой‑нибудь код для нашего `List`!
