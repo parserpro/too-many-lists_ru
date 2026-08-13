@@ -1,0 +1,533 @@
+<!DOCTYPE HTML>
+<html lang="ru" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Layout - Изучаем Rust реализуя большое количество связных списков</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="Перевод книги &#x27;Learning Rust With Entirely Too Many Linked Lists&#x27;">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-e96d0476.css">
+        <link rel="stylesheet" href="css/chrome-d279d366.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-42abd24c.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-bacf64c5.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Изучаем Rust реализуя большое количество связных списков</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/parserpro/too-many-lists_ru" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="basic-data-layout"><a class="header" href="#basic-data-layout">Basic Data Layout</a></h1>
+<p>Alright, so what’s a linked list? Well basically, it’s a bunch of pieces of data
+on the heap (hush, kernel people!) that point to each other in sequence. Linked
+lists are something procedural programmers shouldn’t touch with a 10-foot pole,
+and what functional programmers use for everything. It seems fair, then, that we
+should ask functional programmers for the definition of a linked list. They will
+probably give you something like the following definition:</p>
+<pre><code class="language-haskell">List a = Empty | Elem a (List a)
+</code></pre>
+<p>Which reads approximately as “A List is either Empty or an Element followed by a
+List”. This is a recursive definition expressed as a <em>sum type</em>, which is a
+fancy name for “a type that can have different values which may be different
+types”. Rust calls sum types <code>enum</code>s! If you’re coming from a C-like language,
+this is exactly the enum you know and love, but in overdrive. So let’s
+transcribe this functional definition into Rust!</p>
+<p>For now we’ll avoid generics to keep things simple. We’ll only support
+storing signed 32-bit integers:</p>
+<pre><code class="language-rust ignore">// in first.rs
+
+// pub says we want people outside this module to be able to use List
+pub enum List {
+    Empty,
+    Elem(i32, List),
+}</code></pre>
+<p><em>phew</em>, I’m swamped. Let’s just go ahead and compile that:</p>
+<pre><code class="language-text">&gt; cargo build
+
+error[E0072]: recursive type `first::List` has infinite size
+ --&gt; src/first.rs:4:1
+  |
+4 | pub enum List {
+  | ^^^^^^^^^^^^^ recursive type has infinite size
+5 |     Empty,
+6 |     Elem(i32, List),
+  |               ---- recursive without indirection
+  |
+  = help: insert indirection (e.g., a `Box`, `Rc`, or `&amp;`) at some point to make `first::List` representable
+</code></pre>
+<p>Well. I don’t know about you, but I certainly feel betrayed by the functional
+programming community.</p>
+<p>If we actually check out the error message (after we get over the whole
+betrayal thing), we can see that rustc is actually telling us exactly
+how to solve this problem:</p>
+<blockquote>
+<p>insert indirection (e.g., a <code>Box</code>, <code>Rc</code>, or <code>&amp;</code>) at some point to make <code>first::List</code> representable</p>
+</blockquote>
+<p>Alright, <code>box</code>. What’s that? Let’s google <code>rust box</code>…</p>
+<blockquote>
+<p><a href="https://doc.rust-lang.org/std/boxed/struct.Box.html">std::boxed::Box - Rust</a></p>
+</blockquote>
+<p>Lesse here…</p>
+<blockquote>
+<p><code>pub struct Box&lt;T&gt;(_);</code></p>
+<p>A pointer type for heap allocation.
+See the <a href="https://doc.rust-lang.org/std/boxed/">module-level documentation</a> for more.</p>
+</blockquote>
+<p><em>clicks link</em></p>
+<blockquote>
+<p><code>Box&lt;T&gt;</code>, casually referred to as a ‘box’, provides the simplest form of heap allocation in Rust. Boxes provide ownership for this allocation, and drop their contents when they go out of scope.</p>
+<p>Examples</p>
+<p>Creating a box:</p>
+<p><code>let x = Box::new(5);</code></p>
+<p>Creating a recursive data structure:</p>
+</blockquote>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[derive(Debug)]
+enum List&lt;T&gt; {
+    Cons(T, Box&lt;List&lt;T&gt;&gt;),
+    Nil,
+}
+<span class="boring">}</span></code></pre>
+<blockquote></blockquote>
+<pre><code class="language-rust ignore">fn main() {
+    let list: List&lt;i32&gt; = List::Cons(1, Box::new(List::Cons(2, Box::new(List::Nil))));
+    println!("{:?}", list);
+}</code></pre>
+<blockquote>
+<p>This will print <code>Cons(1, Box(Cons(2, Box(Nil))))</code>.</p>
+<p>Recursive structures must be boxed, because if the definition of Cons looked like this:</p>
+<p><code>Cons(T, List&lt;T&gt;),</code></p>
+<p>It wouldn’t work. This is because the size of a List depends on how many elements are in the list, and so we don’t know how much memory to allocate for a Cons. By introducing a Box, which has a defined size, we know how big Cons needs to be.</p>
+</blockquote>
+<p>Wow, uh. That is perhaps the most relevant and helpful documentation I have ever seen. Literally the first thing in the documentation is <em>exactly what we’re trying to write, why it didn’t work, and how to fix it</em>.</p>
+<p>Dang, docs rule.</p>
+<p>Ok, let’s do that:</p>
+<pre><code class="language-rust ignore">pub enum List {
+    Empty,
+    Elem(i32, Box&lt;List&gt;),
+}</code></pre>
+<pre><code class="language-text">&gt; cargo build
+
+   Finished dev [unoptimized + debuginfo] target(s) in 0.22s
+</code></pre>
+<p>Hey it built!</p>
+<p>…but this is actually a really foolish definition of a List, for a few reasons.</p>
+<p>Consider a list with two elements:</p>
+<pre><code class="language-text">[] = Stack
+() = Heap
+
+[Elem A, ptr] -&gt; (Elem B, ptr) -&gt; (Empty, *junk*)
+</code></pre>
+<p>There are two key issues:</p>
+<ul>
+<li>We’re allocating a node that just says “I’m not actually a Node”</li>
+<li>One of our nodes isn’t heap-allocated at all.</li>
+</ul>
+<p>On the surface, these two seem to cancel each-other out. We heap-allocate an
+extra node, but one of our nodes doesn’t need to be heap-allocated at all.
+However, consider the following potential layout for our list:</p>
+<pre><code class="language-text">[ptr] -&gt; (Elem A, ptr) -&gt; (Elem B, *null*)
+</code></pre>
+<p>In this layout we now unconditionally heap allocate our nodes. The
+key difference is the absence of the <em>junk</em> from our first layout. What is
+this junk? To understand that, we’ll need to look at how an enum is laid out
+in memory.</p>
+<p>In general, if we have an enum like:</p>
+<pre><code class="language-rust ignore">enum Foo {
+    D1(T1),
+    D2(T2),
+    ...
+    Dn(Tn),
+}</code></pre>
+<p>A Foo will need to store some integer to indicate which <em>variant</em> of the enum it
+represents (<code>D1</code>, <code>D2</code>, .. <code>Dn</code>). This is the <em>tag</em> of the enum. It will also
+need enough space to store the <em>largest</em> of <code>T1</code>, <code>T2</code>, .. <code>Tn</code> (plus some extra
+space to satisfy alignment requirements).</p>
+<p>The big takeaway here is that even though <code>Empty</code> is a single bit of
+information, it necessarily consumes enough space for a pointer and an element,
+because it has to be ready to become an <code>Elem</code> at any time. Therefore the first
+layout heap allocates an extra element that’s just full of junk, consuming a
+bit more space than the second layout.</p>
+<p>One of our nodes not being allocated at all is also, perhaps surprisingly,
+<em>worse</em> than always allocating it. This is because it gives us a <em>non-uniform</em>
+node layout. This doesn’t have much of an appreciable effect on pushing and
+popping nodes, but it does have an effect on splitting and merging lists.</p>
+<p>Consider splitting a list in both layouts:</p>
+<pre><code class="language-text">layout 1:
+
+[Elem A, ptr] -&gt; (Elem B, ptr) -&gt; (Elem C, ptr) -&gt; (Empty *junk*)
+
+split off C:
+
+[Elem A, ptr] -&gt; (Elem B, ptr) -&gt; (Empty *junk*)
+[Elem C, ptr] -&gt; (Empty *junk*)
+</code></pre>
+<pre><code class="language-text">layout 2:
+
+[ptr] -&gt; (Elem A, ptr) -&gt; (Elem B, ptr) -&gt; (Elem C, *null*)
+
+split off C:
+
+[ptr] -&gt; (Elem A, ptr) -&gt; (Elem B, *null*)
+[ptr] -&gt; (Elem C, *null*)
+</code></pre>
+<p>Layout 2’s split involves just copying B’s pointer to the stack and nulling
+the old value out. Layout 1 ultimately does the same thing, but also has to
+copy C from the heap to the stack. Merging is the same process in reverse.</p>
+<p>One of the few nice things about a linked list is that you can construct the
+element in the node itself, and then freely shuffle it around lists without
+ever moving it. You just fiddle with pointers and stuff gets “moved”. Layout 1
+trashes this property.</p>
+<p>Alright, I’m reasonably convinced Layout 1 is bad. How do we rewrite our List?
+Well, we could do something like:</p>
+<pre><code class="language-rust ignore">pub enum List {
+    Empty,
+    ElemThenEmpty(i32),
+    ElemThenNotEmpty(i32, Box&lt;List&gt;),
+}</code></pre>
+<p>Hopefully this seems like an even worse idea to you. Most notably, this really
+complicates our logic, because there is now a completely invalid state:
+<code>ElemThenNotEmpty(0, Box(Empty))</code>. It also <em>still</em> suffers from non-uniformly
+allocating our elements.</p>
+<p>However it does have <em>one</em> interesting property: it totally avoids allocating
+the Empty case, reducing the total number of heap allocations by 1. Unfortunately,
+in doing so it manages to waste <em>even more space</em>! This is because the previous
+layout took advantage of the <em>null pointer optimization</em>.</p>
+<p>We previously saw that every enum has to store a <em>tag</em> to specify which variant
+of the enum its bits represent. However, if we have a special kind of enum:</p>
+<pre><code class="language-rust ignore">enum Foo {
+    A,
+    B(ContainsANonNullPtr),
+}</code></pre>
+<p>the null pointer optimization kicks in, which <em>eliminates the space needed for
+the tag</em>. If the variant is A, the whole enum is set to all <code>0</code>’s. Otherwise,
+the variant is B. This works because B can never be all <code>0</code>’s, since it contains
+a non-zero pointer. Slick!</p>
+<p>Can you think of other enums and types that could do this kind of optimization?
+There’s actually a lot! This is why Rust leaves enum layout totally unspecified.
+There are a few more complicated enum layout optimizations that Rust will do for
+us, but the null pointer one is definitely the most important!
+It means <code>&amp;</code>, <code>&amp;mut</code>, <code>Box</code>, <code>Rc</code>, <code>Arc</code>, <code>Vec</code>, and
+several other important types in Rust have no overhead when put in an <code>Option</code>!
+(We’ll get to most of these in due time.)</p>
+<p>So how do we avoid the extra junk, uniformly allocate, <em>and</em> get that sweet
+null-pointer optimization? We need to better separate out the idea of having an
+element from allocating another list. To do this, we have to think a little more
+C-like: structs!</p>
+<p>While enums let us declare a type that can contain <em>one</em> of several values,
+structs let us declare a type that contains <em>many</em> values at once. Let’s break
+our List into two types: A List, and a Node.</p>
+<p>As before, a List is either Empty or has an element followed by another List.
+By representing the “has an element followed by another List” case by an
+entirely separate type, we can hoist the Box to be in a more optimal position:</p>
+<pre><code class="language-rust ignore">struct Node {
+    elem: i32,
+    next: List,
+}
+
+pub enum List {
+    Empty,
+    More(Box&lt;Node&gt;),
+}</code></pre>
+<p>Let’s check our priorities:</p>
+<ul>
+<li>Tail of a list never allocates extra junk: check!</li>
+<li><code>enum</code> is in delicious null-pointer-optimized form: check!</li>
+<li>All elements are uniformly allocated: check!</li>
+</ul>
+<p>Alright! We actually just constructed exactly the layout that we used to
+demonstrate that our first layout (as suggested by the official Rust
+documentation) was problematic.</p>
+<pre><code class="language-text">&gt; cargo build
+
+warning: private type `first::Node` in public interface (error E0446)
+ --&gt; src/first.rs:8:10
+  |
+8 |     More(Box&lt;Node&gt;),
+  |          ^^^^^^^^^
+  |
+  = note: #[warn(private_in_public)] on by default
+  = warning: this was previously accepted by the compiler but
+    is being phased out; it will become a hard error in a future release!
+</code></pre>
+<p>:(</p>
+<p>Rust is mad at us again. We marked the <code>List</code> as public (because we want people
+to be able to use it), but not the <code>Node</code>. The problem is that the internals of
+an <code>enum</code> are totally public, and we’re not allowed to publicly talk about
+private types. We could make all of <code>Node</code> totally public, but generally in Rust
+we favour keeping implementation details private. Let’s make <code>List</code> a struct, so
+that we can hide the implementation details:</p>
+<pre><code class="language-rust ignore">pub struct List {
+    head: Link,
+}
+
+enum Link {
+    Empty,
+    More(Box&lt;Node&gt;),
+}
+
+struct Node {
+    elem: i32,
+    next: Link,
+}</code></pre>
+<p>Because <code>List</code> is a struct with a single field, its size is the same as that
+field. Yay zero-cost abstractions!</p>
+<pre><code class="language-text">&gt; cargo build
+
+warning: field is never used: `head`
+ --&gt; src/first.rs:2:5
+  |
+2 |     head: Link,
+  |     ^^^^^^^^^^
+  |
+  = note: #[warn(dead_code)] on by default
+
+warning: variant is never constructed: `Empty`
+ --&gt; src/first.rs:6:5
+  |
+6 |     Empty,
+  |     ^^^^^
+
+warning: variant is never constructed: `More`
+ --&gt; src/first.rs:7:5
+  |
+7 |     More(Box&lt;Node&gt;),
+  |     ^^^^^^^^^^^^^^^
+
+warning: field is never used: `elem`
+  --&gt; src/first.rs:11:5
+   |
+11 |     elem: i32,
+   |     ^^^^^^^^^
+
+warning: field is never used: `next`
+  --&gt; src/first.rs:12:5
+   |
+12 |     next: Link,
+   |     ^^^^^^^^^^
+
+</code></pre>
+<p>Alright, that compiled! Rust is pretty mad, because as far as it can tell,
+everything we’ve written is totally useless: we never use <code>head</code>, and no one who
+uses our library can either since it’s private. Transitively, that means Link
+and Node are useless too. So let’s solve that! Let’s implement some code for our
+List!</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="first.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="first-new.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="first.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="first-new.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
