@@ -22,7 +22,7 @@ pub enum List {
 }
 ```
 
-*phew*, I'm swamped. Let's just go ahead and compile that:
+*фух*, голова кругом от всего этого. Давайте продолжим и попробуем это скомпилировать:
 
 ```text
 > cargo build
@@ -39,37 +39,34 @@ error[E0072]: recursive type `first::List` has infinite size
   = help: insert indirection (e.g., a `Box`, `Rc`, or `&`) at some point to make `first::List` representable
 ```
 
-Well. I don't know about you, but I certainly feel betrayed by the functional
-programming community.
+Ну… Не знаю, как вы, а я определённо чувствую себя преданным сообществом функционального программирования.
 
-If we actually check out the error message (after we get over the whole
-betrayal thing), we can see that rustc is actually telling us exactly
-how to solve this problem:
+Если мы действительно прочитаем сообщение об ошибке (после того как переживём весь этот момент предательства), то увидим, что rustc фактически прямо говорит нам, как решить проблему:
 
 > insert indirection (e.g., a `Box`, `Rc`, or `&`) at some point to make `first::List` representable
 
-Alright, `box`. What's that? Let's google `rust box`...
+Ладно, `Box`. Что это такое? Давайте погуглим `rust box`...
 
 > [std::boxed::Box - Rust](https://doc.rust-lang.org/std/boxed/struct.Box.html)
 
-Lesse here...
+*так-с*, поглядим…
 
 > `pub struct Box<T>(_);`
 >
-> A pointer type for heap allocation.
-> See the [module-level documentation](https://doc.rust-lang.org/std/boxed/) for more.
+> Тип указателя для выделения памяти в куче.
+> Подробнее см. в [документации на уровне модуля](https://doc.rust-lang.org/std/boxed/).
 
-*clicks link*
+*кликает по ссылке*
 
-> `Box<T>`, casually referred to as a 'box', provides the simplest form of heap allocation in Rust. Boxes provide ownership for this allocation, and drop their contents when they go out of scope.
+> `Box<T>`, в обиходе называемый «боксом», предоставляет простейшую форму выделения памяти в куче в Rust. Боксы обеспечивают владение этим выделением и удаляют своё содержимое, когда выходят из области видимости.
 >
-> Examples
+> Примеры
 >
-> Creating a box:
+> Создание бокса:
 >
 > `let x = Box::new(5);`
 >
-> Creating a recursive data structure:
+> Создание рекурсивной структуры данных:
 >
 ```rust
 #[derive(Debug)]
@@ -86,19 +83,19 @@ fn main() {
 }
 ```
 >
-> This will print `Cons(1, Box(Cons(2, Box(Nil))))`.
+> Это выведет `Cons(1, Box(Cons(2, Box(Nil))))`.
 >
-> Recursive structures must be boxed, because if the definition of Cons looked like this:
+> Рекурсивные структуры должны быть «забоксованы», потому что, если бы определение Cons выглядело так:
 >
 > `Cons(T, List<T>),`
 >
-> It wouldn't work. This is because the size of a List depends on how many elements are in the list, and so we don't know how much memory to allocate for a Cons. By introducing a Box, which has a defined size, we know how big Cons needs to be.
+> оно не сработало бы. Дело в том, что размер List зависит от количества элементов в списке, а значит, мы не знаем, сколько памяти выделить под Cons. Добавив Box, у которого размер фиксирован, мы точно знаем, какого размера должен быть Cons.
 
-Wow, uh. That is perhaps the most relevant and helpful documentation I have ever seen. Literally the first thing in the documentation is *exactly what we're trying to write, why it didn't work, and how to fix it*.
+Вау, ну это, пожалуй, самая релевантная и полезная документация, которую я когда‑либо видел. Буквально первое, что написано в документации, — это *ровно то, что мы пытаемся написать, почему это не работает и как это исправить*.
 
-Dang, docs rule.
+Чёрт, документация — это сила!
 
-Ok, let's do that:
+Ок, давайте сделаем так:
 
 ```rust ,ignore
 pub enum List {
@@ -113,11 +110,12 @@ pub enum List {
    Finished dev [unoptimized + debuginfo] target(s) in 0.22s
 ```
 
-Hey it built!
+Ого, оно собралось!
 
-...but this is actually a really foolish definition of a List, for a few reasons.
+…но на самом деле это очень неудачное определение List — и на то есть несколько причин.
 
-Consider a list with two elements:
+Рассмотрим список из двух элементов:
+
 
 ```text
 [] = Stack
@@ -126,25 +124,20 @@ Consider a list with two elements:
 [Elem A, ptr] -> (Elem B, ptr) -> (Empty, *junk*)
 ```
 
-There are two key issues:
+Есть две ключевые проблемы:
 
-* We're allocating a node that just says "I'm not actually a Node"
-* One of our nodes isn't heap-allocated at all.
+* Мы выделяем узел, который по сути просто говорит: «На самом деле я не узел».
+* Один из наших узлов вообще не выделяется в куче.
 
-On the surface, these two seem to cancel each-other out. We heap-allocate an
-extra node, but one of our nodes doesn't need to be heap-allocated at all.
-However, consider the following potential layout for our list:
+На первый взгляд кажется, что эти две вещи компенсируют друг друга: мы выделяем в куче лишний узел, но зато один из узлов вообще не требует выделения в куче. Однако давайте рассмотрим следующую возможную компоновку нашего списка:
 
 ```text
 [ptr] -> (Elem A, ptr) -> (Elem B, *null*)
 ```
 
-In this layout we now unconditionally heap allocate our nodes. The
-key difference is the absence of the *junk* from our first layout. What is
-this junk? To understand that, we'll need to look at how an enum is laid out
-in memory.
+В этой компоновке мы теперь безусловно выделяем узлы в куче. Ключевое отличие — отсутствие *мусора* из нашей первой компоновки. Что это за мусор? Чтобы разобраться, нужно посмотреть, как enum располагается в памяти.
 
-In general, if we have an enum like:
+В общем случае, если у нас есть enum вроде:
 
 ```rust ,ignore
 enum Foo {
@@ -155,23 +148,13 @@ enum Foo {
 }
 ```
 
-A Foo will need to store some integer to indicate which *variant* of the enum it
-represents (`D1`, `D2`, .. `Dn`). This is the *tag* of the enum. It will also
-need enough space to store the *largest* of `T1`, `T2`, .. `Tn` (plus some extra
-space to satisfy alignment requirements).
+У `Foo` должно храниться какое‑то целое число, чтобы указать, какой *вариант* enum он представляет (`D1`, `D2`, … `Dn`). Это *тег* enum. Кроме того, ему нужно достаточно места, чтобы вместить *самый большой* из типов `T1`, `T2`, … `Tn` (плюс немного дополнительного места для соблюдения требований выравнивания).
 
-The big takeaway here is that even though `Empty` is a single bit of
-information, it necessarily consumes enough space for a pointer and an element,
-because it has to be ready to become an `Elem` at any time. Therefore the first
-layout heap allocates an extra element that's just full of junk, consuming a
-bit more space than the second layout.
+Главный вывод здесь в том, что, хотя `Empty` — это по сути всего один бит информации, он неизбежно занимает столько места, сколько нужно для указателя и элемента: ведь в любой момент он должен быть готов превратиться в `Elem`. Поэтому в первой компоновке мы выделяем в куче лишний элемент, который по факту заполнен «мусором» и потребляет чуть больше памяти, чем во второй компоновке.
 
-One of our nodes not being allocated at all is also, perhaps surprisingly,
-*worse* than always allocating it. This is because it gives us a *non-uniform*
-node layout. This doesn't have much of an appreciable effect on pushing and
-popping nodes, but it does have an effect on splitting and merging lists.
+Тот факт, что один из наших узлов вообще не выделяется в памяти, тоже, как ни странно, *хуже*, чем если бы мы всегда его выделяли. Всё из‑за того, что это даёт нам *неоднородную* компоновку узлов. На операциях push и pop это почти не сказывается, а вот на разбиении и слиянии списков — очень даже.
 
-Consider splitting a list in both layouts:
+Рассмотрим, как происходит разбиение списка в обеих компоновках:
 
 ```text
 layout 1:
@@ -195,17 +178,11 @@ split off C:
 [ptr] -> (Elem C, *null*)
 ```
 
-Layout 2's split involves just copying B's pointer to the stack and nulling
-the old value out. Layout 1 ultimately does the same thing, but also has to
-copy C from the heap to the stack. Merging is the same process in reverse.
+При разбиении в компоновке 2 нужно просто скопировать указатель на B в стек и обнулить старое значение. В компоновке 1 в итоге делается то же самое, но ещё приходится копировать C из кучи в стек. Слияние — это тот же процесс, только в обратном порядке.
 
-One of the few nice things about a linked list is that you can construct the
-element in the node itself, and then freely shuffle it around lists without
-ever moving it. You just fiddle with pointers and stuff gets "moved". Layout 1
-trashes this property.
+Одно из немногих преимуществ связного списка в том, что элемент можно создать прямо внутри узла, а потом свободно перемещать его между списками, вообще не трогая сам элемент. Вы просто возитесь с указателями — и элемент как будто «перемещается». Компоновка 1 лишает нас этого преимущества.
 
-Alright, I'm reasonably convinced Layout 1 is bad. How do we rewrite our List?
-Well, we could do something like:
+Ладно, я вполне убеждён, что компоновка 1 — плохая идея. Как нам переписать List? Ну, можно сделать примерно так:
 
 ```rust ,ignore
 pub enum List {
