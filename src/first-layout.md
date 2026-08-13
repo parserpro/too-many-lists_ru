@@ -8,20 +8,14 @@
 List a = Empty | Elem a (List a)
 ```
 
-Which reads approximately as "A List is either Empty or an Element followed by a
-List". This is a recursive definition expressed as a *sum type*, which is a
-fancy name for "a type that can have different values which may be different
-types". Rust calls sum types `enum`s! If you're coming from a C-like language,
-this is exactly the enum you know and love, but in overdrive. So let's
-transcribe this functional definition into Rust!
+Это примерно читается как «Список — либо пустой, либо элемент, за которым следует Список». Это рекурсивное определение, выраженное в виде *суммарного типа* — заумное название для «типа, который может принимать разные значения, потенциально разных типов». В Rust суммарные типы называются `enum`! Если вы пришли из C‑подобного языка, это тот самый `enum`, который вы знаете и любите, — только на стероидах. Итак, давайте перенесём это функциональное определение в Rust!
 
-For now we'll avoid generics to keep things simple. We'll only support
-storing signed 32-bit integers:
+Пока обойдёмся без обобщений, чтобы всё было проще. Будем поддерживать хранение только знаковых 32‑битных целых чисел:
 
 ```rust ,ignore
-// in first.rs
+// в first.rs
 
-// pub says we want people outside this module to be able to use List
+// pub означает, что мы хотим, чтобы люди вне этого модуля могли использовать List
 pub enum List {
     Empty,
     Elem(i32, List),
