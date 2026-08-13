@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-42abd24c.js";
+            window.path_to_searchindex_js = "searchindex-3805cb66.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-bacf64c5.js"></script>
+        <script src="toc-929425a1.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -306,31 +306,21 @@
 <pre><code class="language-rust ignore">// in lib.rs
 pub mod first;</code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="basic-data-layout"><a class="header" href="#basic-data-layout">Basic Data Layout</a></h1>
-<p>Alright, so what’s a linked list? Well basically, it’s a bunch of pieces of data
-on the heap (hush, kernel people!) that point to each other in sequence. Linked
-lists are something procedural programmers shouldn’t touch with a 10-foot pole,
-and what functional programmers use for everything. It seems fair, then, that we
-should ask functional programmers for the definition of a linked list. They will
-probably give you something like the following definition:</p>
+<h1 id="базовая-компоновка-данных"><a class="header" href="#базовая-компоновка-данных">Базовая компоновка данных</a></h1>
+<p>Ладно, что же такое связный список? В сущности, это набор фрагментов данных в куче (тсс, люди из ядра!), которые последовательно указывают друг на друга.</p>
+<p>Связные списки — это то, к чему процедурным программистам не стоит приближаться даже на расстояние десяти футов, и то, что функциональные программисты используют для всего подряд. Поэтому кажется справедливым спросить у функциональных программистов, как они определяют связный список. Скорее всего, они дадут вам примерно такое определение:</p>
 <pre><code class="language-haskell">List a = Empty | Elem a (List a)
 </code></pre>
-<p>Which reads approximately as “A List is either Empty or an Element followed by a
-List”. This is a recursive definition expressed as a <em>sum type</em>, which is a
-fancy name for “a type that can have different values which may be different
-types”. Rust calls sum types <code>enum</code>s! If you’re coming from a C-like language,
-this is exactly the enum you know and love, but in overdrive. So let’s
-transcribe this functional definition into Rust!</p>
-<p>For now we’ll avoid generics to keep things simple. We’ll only support
-storing signed 32-bit integers:</p>
-<pre><code class="language-rust ignore">// in first.rs
+<p>Это примерно читается как «Список — либо пустой, либо элемент, за которым следует Список». Это рекурсивное определение, выраженное в виде <em>суммарного типа</em> — заумное название для «типа, который может принимать разные значения, потенциально разных типов». В Rust суммарные типы называются <code>enum</code>! Если вы пришли из C‑подобного языка, это тот самый <code>enum</code>, который вы знаете и любите, — только на стероидах. Итак, давайте перенесём это функциональное определение в Rust!</p>
+<p>Пока обойдёмся без обобщений, чтобы всё было проще. Будем поддерживать хранение только знаковых 32‑битных целых чисел:</p>
+<pre><code class="language-rust ignore">// в first.rs
 
-// pub says we want people outside this module to be able to use List
+// pub означает, что мы хотим, чтобы люди вне этого модуля могли использовать List
 pub enum List {
     Empty,
     Elem(i32, List),
 }</code></pre>
-<p><em>phew</em>, I’m swamped. Let’s just go ahead and compile that:</p>
+<p><em>фух</em>, голова кругом от всего этого. Давайте продолжим и попробуем это скомпилировать:</p>
 <pre><code class="language-text">&gt; cargo build
 
 error[E0072]: recursive type `first::List` has infinite size
@@ -344,31 +334,28 @@ error[E0072]: recursive type `first::List` has infinite size
   |
   = help: insert indirection (e.g., a `Box`, `Rc`, or `&amp;`) at some point to make `first::List` representable
 </code></pre>
-<p>Well. I don’t know about you, but I certainly feel betrayed by the functional
-programming community.</p>
-<p>If we actually check out the error message (after we get over the whole
-betrayal thing), we can see that rustc is actually telling us exactly
-how to solve this problem:</p>
+<p>Ну… Не знаю, как вы, а я определённо чувствую себя преданным сообществом функционального программирования.</p>
+<p>Если мы действительно прочитаем сообщение об ошибке (после того как переживём весь этот момент предательства), то увидим, что rustc фактически прямо говорит нам, как решить проблему:</p>
 <blockquote>
 <p>insert indirection (e.g., a <code>Box</code>, <code>Rc</code>, or <code>&amp;</code>) at some point to make <code>first::List</code> representable</p>
 </blockquote>
-<p>Alright, <code>box</code>. What’s that? Let’s google <code>rust box</code>…</p>
+<p>Ладно, <code>Box</code>. Что это такое? Давайте погуглим <code>rust box</code>…</p>
 <blockquote>
 <p><a href="https://doc.rust-lang.org/std/boxed/struct.Box.html">std::boxed::Box - Rust</a></p>
 </blockquote>
-<p>Lesse here…</p>
+<p><em>так-с</em>, поглядим…</p>
 <blockquote>
 <p><code>pub struct Box&lt;T&gt;(_);</code></p>
-<p>A pointer type for heap allocation.
-See the <a href="https://doc.rust-lang.org/std/boxed/">module-level documentation</a> for more.</p>
+<p>Тип указателя для выделения памяти в куче.
+Подробнее см. в <a href="https://doc.rust-lang.org/std/boxed/">документации на уровне модуля</a>.</p>
 </blockquote>
-<p><em>clicks link</em></p>
+<p><em>кликает по ссылке</em></p>
 <blockquote>
-<p><code>Box&lt;T&gt;</code>, casually referred to as a ‘box’, provides the simplest form of heap allocation in Rust. Boxes provide ownership for this allocation, and drop their contents when they go out of scope.</p>
-<p>Examples</p>
-<p>Creating a box:</p>
+<p><code>Box&lt;T&gt;</code>, в обиходе называемый «боксом», предоставляет простейшую форму выделения памяти в куче в Rust. Боксы обеспечивают владение этим выделением и удаляют своё содержимое, когда выходят из области видимости.</p>
+<p>Примеры</p>
+<p>Создание бокса:</p>
 <p><code>let x = Box::new(5);</code></p>
-<p>Creating a recursive data structure:</p>
+<p>Создание рекурсивной структуры данных:</p>
 </blockquote>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -384,14 +371,14 @@ enum List&lt;T&gt; {
     println!("{:?}", list);
 }</code></pre>
 <blockquote>
-<p>This will print <code>Cons(1, Box(Cons(2, Box(Nil))))</code>.</p>
-<p>Recursive structures must be boxed, because if the definition of Cons looked like this:</p>
+<p>Это выведет <code>Cons(1, Box(Cons(2, Box(Nil))))</code>.</p>
+<p>Рекурсивные структуры должны быть «забоксованы», потому что, если бы определение Cons выглядело так:</p>
 <p><code>Cons(T, List&lt;T&gt;),</code></p>
-<p>It wouldn’t work. This is because the size of a List depends on how many elements are in the list, and so we don’t know how much memory to allocate for a Cons. By introducing a Box, which has a defined size, we know how big Cons needs to be.</p>
+<p>оно не сработало бы. Дело в том, что размер List зависит от количества элементов в списке, а значит, мы не знаем, сколько памяти выделить под Cons. Добавив Box, у которого размер фиксирован, мы точно знаем, какого размера должен быть Cons.</p>
 </blockquote>
-<p>Wow, uh. That is perhaps the most relevant and helpful documentation I have ever seen. Literally the first thing in the documentation is <em>exactly what we’re trying to write, why it didn’t work, and how to fix it</em>.</p>
-<p>Dang, docs rule.</p>
-<p>Ok, let’s do that:</p>
+<p>Вау, ну это, пожалуй, самая релевантная и полезная документация, которую я когда‑либо видел. Буквально первое, что написано в документации, — это <em>ровно то, что мы пытаемся написать, почему это не работает и как это исправить</em>.</p>
+<p>Чёрт, документация — это сила!</p>
+<p>Ок, давайте сделаем так:</p>
 <pre><code class="language-rust ignore">pub enum List {
     Empty,
     Elem(i32, Box&lt;List&gt;),
@@ -400,49 +387,34 @@ enum List&lt;T&gt; {
 
    Finished dev [unoptimized + debuginfo] target(s) in 0.22s
 </code></pre>
-<p>Hey it built!</p>
-<p>…but this is actually a really foolish definition of a List, for a few reasons.</p>
-<p>Consider a list with two elements:</p>
+<p>Ого, оно собралось!</p>
+<p>…но на самом деле это очень неудачное определение List — и на то есть несколько причин.</p>
+<p>Рассмотрим список из двух элементов:</p>
 <pre><code class="language-text">[] = Stack
 () = Heap
 
 [Elem A, ptr] -&gt; (Elem B, ptr) -&gt; (Empty, *junk*)
 </code></pre>
-<p>There are two key issues:</p>
+<p>Есть две ключевые проблемы:</p>
 <ul>
-<li>We’re allocating a node that just says “I’m not actually a Node”</li>
-<li>One of our nodes isn’t heap-allocated at all.</li>
+<li>Мы выделяем узел, который по сути просто говорит: «На самом деле я не узел».</li>
+<li>Один из наших узлов вообще не выделяется в куче.</li>
 </ul>
-<p>On the surface, these two seem to cancel each-other out. We heap-allocate an
-extra node, but one of our nodes doesn’t need to be heap-allocated at all.
-However, consider the following potential layout for our list:</p>
+<p>На первый взгляд кажется, что эти две вещи компенсируют друг друга: мы выделяем в куче лишний узел, но зато один из узлов вообще не требует выделения в куче. Однако давайте рассмотрим следующую возможную компоновку нашего списка:</p>
 <pre><code class="language-text">[ptr] -&gt; (Elem A, ptr) -&gt; (Elem B, *null*)
 </code></pre>
-<p>In this layout we now unconditionally heap allocate our nodes. The
-key difference is the absence of the <em>junk</em> from our first layout. What is
-this junk? To understand that, we’ll need to look at how an enum is laid out
-in memory.</p>
-<p>In general, if we have an enum like:</p>
+<p>В этой компоновке мы теперь безусловно выделяем узлы в куче. Ключевое отличие — отсутствие <em>мусора</em> из нашей первой компоновки. Что это за мусор? Чтобы разобраться, нужно посмотреть, как enum располагается в памяти.</p>
+<p>В общем случае, если у нас есть enum вроде:</p>
 <pre><code class="language-rust ignore">enum Foo {
     D1(T1),
     D2(T2),
     ...
     Dn(Tn),
 }</code></pre>
-<p>A Foo will need to store some integer to indicate which <em>variant</em> of the enum it
-represents (<code>D1</code>, <code>D2</code>, .. <code>Dn</code>). This is the <em>tag</em> of the enum. It will also
-need enough space to store the <em>largest</em> of <code>T1</code>, <code>T2</code>, .. <code>Tn</code> (plus some extra
-space to satisfy alignment requirements).</p>
-<p>The big takeaway here is that even though <code>Empty</code> is a single bit of
-information, it necessarily consumes enough space for a pointer and an element,
-because it has to be ready to become an <code>Elem</code> at any time. Therefore the first
-layout heap allocates an extra element that’s just full of junk, consuming a
-bit more space than the second layout.</p>
-<p>One of our nodes not being allocated at all is also, perhaps surprisingly,
-<em>worse</em> than always allocating it. This is because it gives us a <em>non-uniform</em>
-node layout. This doesn’t have much of an appreciable effect on pushing and
-popping nodes, but it does have an effect on splitting and merging lists.</p>
-<p>Consider splitting a list in both layouts:</p>
+<p>У <code>Foo</code> должно храниться какое‑то целое число, чтобы указать, какой <em>вариант</em> enum он представляет (<code>D1</code>, <code>D2</code>, … <code>Dn</code>). Это <em>тег</em> enum. Кроме того, ему нужно достаточно места, чтобы вместить <em>самый большой</em> из типов <code>T1</code>, <code>T2</code>, … <code>Tn</code> (плюс немного дополнительного места для соблюдения требований выравнивания).</p>
+<p>Главный вывод здесь в том, что, хотя <code>Empty</code> — это по сути всего один бит информации, он неизбежно занимает столько места, сколько нужно для указателя и элемента: ведь в любой момент он должен быть готов превратиться в <code>Elem</code>. Поэтому в первой компоновке мы выделяем в куче лишний элемент, который по факту заполнен «мусором» и потребляет чуть больше памяти, чем во второй компоновке.</p>
+<p>Тот факт, что один из наших узлов вообще не выделяется в памяти, тоже, как ни странно, <em>хуже</em>, чем если бы мы всегда его выделяли. Всё из‑за того, что это даёт нам <em>неоднородную</em> компоновку узлов. На операциях push и pop это почти не сказывается, а вот на разбиении и слиянии списков — очень даже.</p>
+<p>Рассмотрим, как происходит разбиение списка в обеих компоновках:</p>
 <pre><code class="language-text">layout 1:
 
 [Elem A, ptr] -&gt; (Elem B, ptr) -&gt; (Elem C, ptr) -&gt; (Empty *junk*)
@@ -461,15 +433,9 @@ split off C:
 [ptr] -&gt; (Elem A, ptr) -&gt; (Elem B, *null*)
 [ptr] -&gt; (Elem C, *null*)
 </code></pre>
-<p>Layout 2’s split involves just copying B’s pointer to the stack and nulling
-the old value out. Layout 1 ultimately does the same thing, but also has to
-copy C from the heap to the stack. Merging is the same process in reverse.</p>
-<p>One of the few nice things about a linked list is that you can construct the
-element in the node itself, and then freely shuffle it around lists without
-ever moving it. You just fiddle with pointers and stuff gets “moved”. Layout 1
-trashes this property.</p>
-<p>Alright, I’m reasonably convinced Layout 1 is bad. How do we rewrite our List?
-Well, we could do something like:</p>
+<p>При разбиении в компоновке 2 нужно просто скопировать указатель на B в стек и обнулить старое значение. В компоновке 1 в итоге делается то же самое, но ещё приходится копировать C из кучи в стек. Слияние — это тот же процесс, только в обратном порядке.</p>
+<p>Одно из немногих преимуществ связного списка в том, что элемент можно создать прямо внутри узла, а потом свободно перемещать его между списками, вообще не трогая сам элемент. Вы просто возитесь с указателями — и элемент как будто «перемещается». Компоновка 1 лишает нас этого преимущества.</p>
+<p>Ладно, я вполне убеждён, что компоновка 1 — плохая идея. Как нам переписать List? Ну, можно сделать примерно так:</p>
 <pre><code class="language-rust ignore">pub enum List {
     Empty,
     ElemThenEmpty(i32),
