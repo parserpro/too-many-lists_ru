@@ -3,7 +3,7 @@
 * [Введение](README.md)
 * [Плохой стек на базе односвязного списка](first.md)
     * [Базовая компоновка данных](first-layout.md)
-    * [New](first-new.md)
+    * [Конструктор](first-new.md)
     * [Ownership 101](first-ownership.md)
     * [Push](first-push.md)
     * [Pop](first-pop.md)

@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>New - Изучаем Rust реализуя большое количество связных списков</title>
+        <title>Конструктор - Изучаем Rust реализуя большое количество связных списков</title>
 
 
         <!-- Custom HTML head -->
@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c7f61752.js";
+            window.path_to_searchindex_js = "searchindex-51d02b1c.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-929425a1.js"></script>
+        <script src="toc-13c05915.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -177,35 +177,28 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="new"><a class="header" href="#new">New</a></h1>
-<p>To associate actual code with a type, we use <code>impl</code> blocks:</p>
+                        <h1 id="конструктор"><a class="header" href="#конструктор">Конструктор</a></h1>
+<p>Чтобы связать реальный код с типом, мы используем блоки <code>impl</code>:</p>
 <pre><code class="language-rust ignore">impl List {
     // TODO, make code happen
 }</code></pre>
-<p>Now we just need to figure out how to actually write code. In Rust we declare
-a function like so:</p>
+<p>Теперь нам просто нужно разобраться, как на самом деле писать код. В Rust функцию объявляют так:</p>
 <pre><code class="language-rust ignore">fn foo(arg1: Type1, arg2: Type2) -&gt; ReturnType {
     // body
 }</code></pre>
-<p>The first thing we want is a way to <em>construct</em> a list. Since we hide the
-implementation details, we need to provide that as a function. The usual way
-to do that in Rust is to provide a static method, which is just a
-normal function inside an <code>impl</code>:</p>
+<p>Первое, что нам нужно, — способ <em>создать</em> список. Поскольку мы скрываем детали реализации, нужно предоставить для этого функцию. Обычный способ сделать это в Rust — предоставить статический метод, который представляет собой просто обычную функцию внутри блока <code>impl</code>:</p>
 <pre><code class="language-rust ignore">impl List {
     pub fn new() -&gt; Self {
         List { head: Link::Empty }
     }
 }</code></pre>
-<p>A few notes on this:</p>
+<p>Несколько замечаний по этому поводу:</p>
 <ul>
-<li>Self is an alias for “that type I wrote at the top next to <code>impl</code>”. Great for
-not repeating yourself!</li>
-<li>We create an instance of a struct in much the same way we declare it, except
-instead of providing the types of its fields, we initialize them with values.</li>
-<li>We refer to variants of an enum using <code>::</code>, which is the namespacing operator.</li>
-<li>The last expression of a function is implicitly returned.
-This makes simple functions a little neater. You can still use <code>return</code>
-to return early like other C-like languages.</li>
+<li><code>Self</code> — это псевдоним для «того типа, который я написал вверху рядом с <code>impl</code>». Отлично подходит, чтобы не повторяться!</li>
+<li>Экземпляр структуры создаётся почти так же, как она объявляется, — только вместо указания типов полей мы инициализируем их значениями.</li>
+<li>К вариантам enum мы обращаемся через <code>::</code> — это оператор пространства имён.</li>
+<li>Последнее выражение в функции неявно возвращается как результат.
+Благодаря этому простые функции выглядят чуть аккуратнее. При этом по‑прежнему можно использовать <code>return</code>, чтобы вернуться из функции досрочно, — как в других C‑подобных языках.</li>
 </ul>
 
                     </main>
