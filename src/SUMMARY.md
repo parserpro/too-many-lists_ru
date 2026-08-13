@@ -1,7 +1,7 @@
 # Summary
 
 * [Введение](README.md)
-* [A Bad Stack](first.md)
+* [Плохой стек на базе односвязного списка](first.md)
     * [Layout](first-layout.md)
     * [New](first-new.md)
     * [Ownership 101](first-ownership.md)
