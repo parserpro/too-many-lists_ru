@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-3805cb66.js";
+            window.path_to_searchindex_js = "searchindex-c7f61752.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-929425a1.js"></script>
@@ -349,7 +349,7 @@ error[E0072]: recursive type `first::List` has infinite size
 <p>Тип указателя для выделения памяти в куче.
 Подробнее см. в <a href="https://doc.rust-lang.org/std/boxed/">документации на уровне модуля</a>.</p>
 </blockquote>
-<p><em>кликает по ссылке</em></p>
+<p><em>кликнем по ссылке</em></p>
 <blockquote>
 <p><code>Box&lt;T&gt;</code>, в обиходе называемый «боксом», предоставляет простейшую форму выделения памяти в куче в Rust. Боксы обеспечивают владение этим выделением и удаляют своё содержимое, когда выходят из области видимости.</p>
 <p>Примеры</p>
@@ -441,41 +441,19 @@ split off C:
     ElemThenEmpty(i32),
     ElemThenNotEmpty(i32, Box&lt;List&gt;),
 }</code></pre>
-<p>Hopefully this seems like an even worse idea to you. Most notably, this really
-complicates our logic, because there is now a completely invalid state:
-<code>ElemThenNotEmpty(0, Box(Empty))</code>. It also <em>still</em> suffers from non-uniformly
-allocating our elements.</p>
-<p>However it does have <em>one</em> interesting property: it totally avoids allocating
-the Empty case, reducing the total number of heap allocations by 1. Unfortunately,
-in doing so it manages to waste <em>even more space</em>! This is because the previous
-layout took advantage of the <em>null pointer optimization</em>.</p>
-<p>We previously saw that every enum has to store a <em>tag</em> to specify which variant
-of the enum its bits represent. However, if we have a special kind of enum:</p>
+<p>Надеюсь, тебе эта идея тоже кажется ещё хуже. Самое заметное — она сильно усложняет логику, потому что теперь у нас есть совершенно невалидное состояние: <code>ElemThenNotEmpty(0, Box(Empty))</code>. К тому же она <em>по‑прежнему</em> страдает от неравномерного выделения памяти под элементы.</p>
+<p>Но у неё есть <em>одно</em> интересное свойство: она полностью избегает выделения памяти для случая <code>Empty</code>, сокращая общее количество выделений в куче на 1. К сожалению, при этом она умудряется тратить <em>ещё больше</em> памяти! Всё потому, что предыдущая компоновка использовала <em>оптимизацию нулевого указателя</em>.</p>
+<p>Ранее мы видели, что каждый enum должен хранить <em>тег</em>, чтобы указать, какой вариант enum представляют его биты. Но если у нас особый вид enum…</p>
 <pre><code class="language-rust ignore">enum Foo {
     A,
     B(ContainsANonNullPtr),
 }</code></pre>
-<p>the null pointer optimization kicks in, which <em>eliminates the space needed for
-the tag</em>. If the variant is A, the whole enum is set to all <code>0</code>’s. Otherwise,
-the variant is B. This works because B can never be all <code>0</code>’s, since it contains
-a non-zero pointer. Slick!</p>
-<p>Can you think of other enums and types that could do this kind of optimization?
-There’s actually a lot! This is why Rust leaves enum layout totally unspecified.
-There are a few more complicated enum layout optimizations that Rust will do for
-us, but the null pointer one is definitely the most important!
-It means <code>&amp;</code>, <code>&amp;mut</code>, <code>Box</code>, <code>Rc</code>, <code>Arc</code>, <code>Vec</code>, and
-several other important types in Rust have no overhead when put in an <code>Option</code>!
-(We’ll get to most of these in due time.)</p>
-<p>So how do we avoid the extra junk, uniformly allocate, <em>and</em> get that sweet
-null-pointer optimization? We need to better separate out the idea of having an
-element from allocating another list. To do this, we have to think a little more
-C-like: structs!</p>
-<p>While enums let us declare a type that can contain <em>one</em> of several values,
-structs let us declare a type that contains <em>many</em> values at once. Let’s break
-our List into two types: A List, and a Node.</p>
-<p>As before, a List is either Empty or has an element followed by another List.
-By representing the “has an element followed by another List” case by an
-entirely separate type, we can hoist the Box to be in a more optimal position:</p>
+<p>Срабатывает оптимизация нулевого указателя — и она <em>полностью убирает место, нужное для тега</em>. Если вариант — A, весь enum устанавливается в нули. В противном случае вариант — B. Это работает, потому что B никогда не может быть всеми нулями: он содержит ненулевой указатель. Шикарно!</p>
+<p>Можешь придумать другие enum и типы, где возможна такая оптимизация? На самом деле их очень много! Именно поэтому Rust вообще не фиксирует раскладку enum — оставляет её на усмотрение компилятора. Есть и более сложные оптимизации раскладки enum, которые Rust делает для нас, но оптимизация нулевого указателя — определённо самая важная!</p>
+<p>Это значит, что <code>&amp;</code>, <code>&amp;mut</code>, <code>Box</code>, <code>Rc</code>, <code>Arc</code>, <code>Vec</code> и ещё несколько важных типов в Rust не несут накладных расходов, когда помещаются в <code>Option</code>! (До большинства из них мы доберёмся в своё время.)</p>
+<p>Так как же нам избежать лишнего «мусора», выделять память единообразно <em>и</em> получить эту замечательную оптимизацию нулевого указателя? Нужно лучше разделить идею «есть элемент» и «выделяем ещё один список». Для этого придётся подумать чуть более «по‑C‑шному»: через структуры!</p>
+<p>В то время как enum позволяет объявить тип, который может содержать <em>одно</em> из нескольких значений, структуры позволяют объявить тип, который содержит <em>сразу несколько</em> значений. Давайте разобьём наш List на два типа: List и Node.</p>
+<p>Как и раньше, List либо пустой, либо содержит элемент и за ним идёт другой List. Представляя случай «есть элемент, за которым следует другой List» с помощью совершенно отдельного типа, мы можем вынести Box в более оптимальную позицию:</p>
 <pre><code class="language-rust ignore">struct Node {
     elem: i32,
     next: List,
@@ -485,15 +463,13 @@ pub enum List {
     Empty,
     More(Box&lt;Node&gt;),
 }</code></pre>
-<p>Let’s check our priorities:</p>
+<p>Проверим наши приоритеты:</p>
 <ul>
-<li>Tail of a list never allocates extra junk: check!</li>
-<li><code>enum</code> is in delicious null-pointer-optimized form: check!</li>
-<li>All elements are uniformly allocated: check!</li>
+<li>Хвост списка не выделяет лишний «мусор» в памяти: есть!</li>
+<li><code>enum</code> в восхитительной форме с оптимизацией нулевого указателя: есть!</li>
+<li>Все элементы выделяются единообразно: есть!</li>
 </ul>
-<p>Alright! We actually just constructed exactly the layout that we used to
-demonstrate that our first layout (as suggested by the official Rust
-documentation) was problematic.</p>
+<p>Отлично! Мы фактически только что сконструировали ровно ту компоновку, которую раньше использовали, чтобы показать, почему первая компоновка (та самая, которую подсказывала официальная документация Rust) была проблемной.</p>
 <pre><code class="language-text">&gt; cargo build
 
 warning: private type `first::Node` in public interface (error E0446)
@@ -507,12 +483,8 @@ warning: private type `first::Node` in public interface (error E0446)
     is being phased out; it will become a hard error in a future release!
 </code></pre>
 <p>:(</p>
-<p>Rust is mad at us again. We marked the <code>List</code> as public (because we want people
-to be able to use it), but not the <code>Node</code>. The problem is that the internals of
-an <code>enum</code> are totally public, and we’re not allowed to publicly talk about
-private types. We could make all of <code>Node</code> totally public, but generally in Rust
-we favour keeping implementation details private. Let’s make <code>List</code> a struct, so
-that we can hide the implementation details:</p>
+<p>Rust снова на нас сердится. Мы сделали <code>List</code> публичным (потому что хотим, чтобы люди могли его использовать), а <code>Node</code> — нет. Проблема в том, что внутренности <code>enum</code> полностью публичны, а нам нельзя публично упоминать приватные типы.</p>
+<p>Можно сделать весь <code>Node</code> публичным, но в Rust обычно предпочитают держать детали реализации приватными. Давайте сделаем <code>List</code> структурой — так мы сможем скрыть детали реализации:</p>
 <pre><code class="language-rust ignore">pub struct List {
     head: Link,
 }
@@ -526,8 +498,7 @@ struct Node {
     elem: i32,
     next: Link,
 }</code></pre>
-<p>Because <code>List</code> is a struct with a single field, its size is the same as that
-field. Yay zero-cost abstractions!</p>
+<p>Поскольку <code>List</code> — это структура с единственным полем, её размер совпадает с размером этого поля. Ура абстракциям без накладных расходов!</p>
 <pre><code class="language-text">&gt; cargo build
 
 warning: field is never used: `head`
@@ -563,11 +534,7 @@ warning: field is never used: `next`
    |     ^^^^^^^^^^
 
 </code></pre>
-<p>Alright, that compiled! Rust is pretty mad, because as far as it can tell,
-everything we’ve written is totally useless: we never use <code>head</code>, and no one who
-uses our library can either since it’s private. Transitively, that means Link
-and Node are useless too. So let’s solve that! Let’s implement some code for our
-List!</p>
+<p>Отлично, собралось! Rust довольно сильно сердится: насколько он может судить, всё, что мы написали, совершенно бесполезно: мы никогда не используем <code>head</code>, и никто из тех, кто пользуется нашей библиотекой, тоже не сможет этого сделать, потому что поле приватное. По цепочке это значит, что <code>Link</code> и <code>Node</code> тоже бесполезны. Так что давайте это исправим! Давайте реализуем какой‑нибудь код для нашего <code>List</code>!</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="new"><a class="header" href="#new">New</a></h1>
 <p>To associate actual code with a type, we use <code>impl</code> blocks:</p>
