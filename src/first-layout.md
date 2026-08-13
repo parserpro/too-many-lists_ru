@@ -1,11 +1,8 @@
 # Базовая компоновка данных
 
-Alright, so what's a linked list? Well basically, it's a bunch of pieces of data
-on the heap (hush, kernel people!) that point to each other in sequence. Linked
-lists are something procedural programmers shouldn't touch with a 10-foot pole,
-and what functional programmers use for everything. It seems fair, then, that we
-should ask functional programmers for the definition of a linked list. They will
-probably give you something like the following definition:
+Ладно, что же такое связный список? В сущности, это набор фрагментов данных в куче (тсс, люди из ядра!), которые последовательно указывают друг на друга.
+
+Связные списки — это то, к чему процедурным программистам не стоит приближаться даже на расстояние десяти футов, и то, что функциональные программисты используют для всего подряд. Поэтому кажется справедливым спросить у функциональных программистов, как они определяют связный список. Скорее всего, они дадут вам примерно такое определение:
 
 ```haskell
 List a = Empty | Elem a (List a)
