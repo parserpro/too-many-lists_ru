@@ -1,9 +1,6 @@
-# Ownership 101
+# Основы владения (Ownership 101)
 
-Now that we can construct a list, it'd be nice to be able to *do* something
-with it. We do that with "normal" (non-static) methods. Methods are a special
-case of function in Rust because of  the `self` argument, which doesn't have
-a declared type:
+Теперь, когда мы умеем создавать список, было бы здорово уметь с ним *что‑то делать*. Для этого мы используем «обычные» (не статические) методы. Методы — это особый случай функции в Rust из‑за аргумента `self`, у которого нет явно указанного типа:
 
 ```rust ,ignore
 fn foo(self, arg2: Type2) -> ReturnType {
@@ -11,35 +8,17 @@ fn foo(self, arg2: Type2) -> ReturnType {
 }
 ```
 
-There are 3 primary forms that self can take: `self`, `&mut self`, and `&self`.
-These 3 forms represent the three primary forms of ownership in Rust:
+Есть три основные формы, которые может принимать `self`: `self`, `&mut self` и `&self`.  
+Эти три формы отражают три основные формы владения в Rust:
 
-* `self` - Value
-* `&mut self` - mutable reference
-* `&self` - shared reference
+* `self` — значение (владелец);
+* `&mut self` — изменяемая ссылка;
+* `&self` — общая (неизменяемая) ссылка.
 
-A value represents *true* ownership. You can do whatever you want with a value:
-move it, destroy it, mutate it, or loan it out via a reference. When you pass
-something by value, it's *moved* to the new location. The new location now
-owns the value, and the old location can no longer access it. For this reason
-most methods don't want `self` -- it would be pretty lame if trying to work with
-a list made it go away!
+**Значение** олицетворяет *настоящее* владение. Со значением можно делать всё что угодно: перемещать, уничтожать, изменять или одалживать через ссылку. Когда вы передаёте что‑то по значению, оно *перемещается* в новое место. Теперь новое место владеет значением, а старое больше не может к нему обращаться. По этой причине большинство методов не используют `self`: было бы довольно нелепо, если бы попытка поработать со списком приводила к его исчезновению!
 
-A mutable reference represents temporary *exclusive access* to a value that you
-don't own. You're allowed to do absolutely anything you want to a value you
-have a mutable reference to as long you leave it in a valid state when you're
-done (it would be rude to the owner otherwise!). This means you can actually completely
-overwrite the value. A really useful special case of this is *swapping* a value
-out for another, which we'll be using a lot. The only thing you can't do with an
-`&mut` is move the value out with no replacement. `&mut self` is great for
-methods that want to mutate `self`.
+**Изменяемая ссылка** даёт временный *эксклюзивный доступ* к значению, которым вы не владеете. Вы можете делать с этим значением абсолютно всё, что захотите, — главное, оставить его в допустимом состоянии, когда закончите (иначе это будет невежливо по отношению к владельцу!). Это значит, что вы даже можете полностью перезаписать значение. Очень полезный частный случай — *замена* одного значения на другое; мы будем активно этим пользоваться. Единственное, чего нельзя сделать с `&mut`, — это переместить значение, не оставив на его месте замены. `&mut self` отлично подходит для методов, которые хотят изменить `self`.
 
-A shared reference represents temporary *shared access* to a value that you
-don't own. Because you have shared access, you're generally not allowed to
-mutate anything. Think of `&` as putting the value out on display in a museum.
-`&` is great for methods that only want to observe `self`.
+**Общая ссылка** даёт временный *общий доступ* к значению, которым вы не владеете. Поскольку доступ общий, обычно вам не разрешается ничего изменять. Представьте, что `&` — это как выставить значение на витрину в музее. `&` отлично подходит для методов, которым нужно только наблюдать за `self`.
 
-Later we'll see that the rule about mutation can be bypassed in certain cases.
-This is why shared references aren't called *immutable* references. Really,
-mutable references could be called *unique* references, but we've found that
-relating ownership to mutability gives the right intuition 99% of the time.
+Позже мы увидим, что правило о запрете изменений можно обойти в некоторых случаях. Именно поэтому общие ссылки не называют *неизменяемыми*. На самом деле изменяемые ссылки можно было бы называть *уникальными*, но оказалось, что связь владения с изменяемостью даёт правильную интуицию в 99 % случаев.
