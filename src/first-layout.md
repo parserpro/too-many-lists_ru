@@ -1,4 +1,4 @@
-# Basic Data Layout
+# Базовая компоновка данных
 
 Alright, so what's a linked list? Well basically, it's a bunch of pieces of data
 on the heap (hush, kernel people!) that point to each other in sequence. Linked
